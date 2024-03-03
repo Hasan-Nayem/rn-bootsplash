@@ -5,8 +5,8 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect, useState } from 'react';
+import type { PropsWithChildren } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -25,11 +25,14 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import BootSplash from "react-native-bootsplash";
+
+
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
+function Section({ children, title }: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
@@ -62,6 +65,37 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const [data, setData] = useState([]);
+  const fetchData = async () => {
+    const response = await fetch(`https://elm-node-server.vercel.app/surah/all`);
+    const result = response.json();
+    // setData(result)
+
+    //   fetch(`https://elm-node-server.vercel.app/surah/all`)
+    //     .then(response => response.json())
+    //     .then(result => setData(result));
+    return result
+  }
+
+
+  useEffect(() => {
+    const init = async () => {
+
+    };
+
+    init().finally(async () => {
+      fetch(`https://elm-node-server.vercel.app/surah/all`)
+        .then(response => response.json())
+        .then(async result => {
+          setData(result)
+          await BootSplash.hide({ fade: true });
+
+        });
+      console.log("BootSplash has been hidden successfully");
+    });
+
+  }, []);
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -77,19 +111,17 @@ function App(): React.JSX.Element {
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
           <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
+            <Text style={styles.highlight}>App.tsx</Text> to change this
             screen and then come back to see your edits.
           </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          {
+            data.map((sura, index) => <>
+              <Section title="" key={index + 1}>
+                <Text  style={styles.highlight}> {index + 1} . {sura?.name} </Text>
+              </Section>
+            </>)
+          }
+
         </View>
       </ScrollView>
     </SafeAreaView>
